@@ -1,9 +1,6 @@
-numpy==2.2.6
-scipy>=1.11.1
-threadpoolctl>=3.1.0
-joblib>=1.5.1
+gdown==4.7.1
+joblib==1.5.1
+pandas==1.5.3
+numpy==1.24.3
 scikit-learn==1.6.1
-pandas==2.3.1
 streamlit==1.48.1
-matplotlib==3.7.1
-seaborn==0.12.2
