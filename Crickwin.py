@@ -4,22 +4,19 @@ import joblib
 import os
 
 # ===========================
-# 1. Load model safely with caching
+# 1. Load model once with caching
 # ===========================
 MODEL_PATH = "live_probability_model_comp.joblib"
 
-@st.cache_data
+@st.cache_data(show_spinner=True)
 def load_model(path):
     if not os.path.exists(path):
         st.error(f"Model file not found at {path}. Please upload or set correct path.")
         st.stop()
     try:
         return joblib.load(path)
-    except AttributeError as e:
-        st.error(f"Failed to load model due to missing class/module: {e}")
-        st.stop()
     except Exception as e:
-        st.error(f"Unexpected error loading model: {e}")
+        st.error(f"Error loading model: {e}")
         st.stop()
 
 model = load_model(MODEL_PATH)
@@ -48,11 +45,8 @@ st.subheader("Enter Match Details")
 # 3. User inputs
 # ===========================
 col1, col2 = st.columns(2)
-
 with col1:
-    venue = st.selectbox("Venue", options=[
-        'SuperSport Park', 'Dubai International Cricket Stadium', "Lord's", 'Others'
-    ])
+    venue = st.selectbox("Venue", options=['SuperSport Park', 'Dubai International Cricket Stadium', "Lord's", 'Others'])
     innings = st.radio("Innings", options=[1, 2])
 
 with col2:
@@ -62,6 +56,7 @@ with col2:
 overs_completed = st.number_input("Overs Completed", min_value=0.0, max_value=50.0, value=0.0, step=0.1)
 st.progress(min(overs_completed / 50, 1.0))
 
+target_score = None
 if innings == 2:
     target_score = st.number_input("Target Score", min_value=1, value=1, step=1)
     if current_runs > target_score:
@@ -69,57 +64,54 @@ if innings == 2:
         st.stop()
 
 # ===========================
-# 4. Feature calculations
-# ===========================
-TOTAL_OVERS = 50
-balls_bowled = overs_completed * 6
-balls_remaining = max((TOTAL_OVERS * 6) - balls_bowled, 1)  # avoid division by zero
-
-crr = current_runs / overs_completed if overs_completed > 0 else 0
-
-# Prepare input data (match your trained model columns!)
-input_data = pd.DataFrame({
-    "Venue": [venue],
-    "Current Score": [current_runs],
-    "Wickets_in_Hand": [wickets_in_hand],
-    "Overs Completed": [overs_completed],
-    "CRR": [crr],
-    "Innings": [innings],
-    "RRR": [0],
-    "Runs_to_Get": [0],
-    "Balls_Remaining": [0],
-    "Pressure": [0],
-    "Home_Advantage": [0],  # default
-})
-
-if innings == 2:
-    runs_to_get = target_score - current_runs
-    rrr = (runs_to_get * 6) / balls_remaining
-    pressure = runs_to_get / (wickets_in_hand + 1) if wickets_in_hand > 0 else runs_to_get
-    input_data["RRR"] = [rrr]
-    input_data["Runs_to_Get"] = [runs_to_get]
-    input_data["Balls_Remaining"] = [balls_remaining]
-    input_data["Pressure"] = [pressure]
-else:
-    projected_score = int(crr * TOTAL_OVERS)
-
-# ===========================
-# 5. Display live stats
-# ===========================
-st.markdown("### 📊 Live Match Stats")
-col_a, col_b, col_c = st.columns(3)
-with col_a:
-    st.markdown(f"<span class='badge badge-blue'>CRR: {crr:.2f}</span>", unsafe_allow_html=True)
-with col_b:
-    if innings == 2:
-        st.markdown(f"<span class='badge badge-red'>RRR: {rrr:.2f}</span>", unsafe_allow_html=True)
-with col_c:
-    st.markdown(f"<span class='badge badge-green'>Wickets: {wickets_in_hand}</span>", unsafe_allow_html=True)
-
-# ===========================
-# 6. Predict probability & analysis
+# 4. Button callback for all calculations
 # ===========================
 if st.button("Predict Probability"):
+
+    # Safe calculations
+    TOTAL_OVERS = 50
+    balls_bowled = overs_completed * 6
+    balls_remaining = max((TOTAL_OVERS * 6) - balls_bowled, 1)
+    crr = current_runs / overs_completed if overs_completed > 0 else 0
+
+    # Prepare input data matching your model
+    input_data = pd.DataFrame({
+        "Venue": [venue],
+        "Current Score": [current_runs],
+        "Wickets_in_Hand": [wickets_in_hand],
+        "Overs Completed": [overs_completed],
+        "CRR": [crr],
+        "Innings": [innings],
+        "RRR": [0],
+        "Runs_to_Get": [0],
+        "Balls_Remaining": [0],
+        "Pressure": [0],
+        "Home_Advantage": [0],
+    })
+
+    if innings == 2:
+        runs_to_get = target_score - current_runs
+        rrr = (runs_to_get * 6) / balls_remaining
+        pressure = runs_to_get / (wickets_in_hand + 1) if wickets_in_hand > 0 else runs_to_get
+        input_data["RRR"] = [rrr]
+        input_data["Runs_to_Get"] = [runs_to_get]
+        input_data["Balls_Remaining"] = [balls_remaining]
+        input_data["Pressure"] = [pressure]
+    else:
+        projected_score = int(crr * TOTAL_OVERS)
+
+    # Display live stats
+    st.markdown("### 📊 Live Match Stats")
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.markdown(f"<span class='badge badge-blue'>CRR: {crr:.2f}</span>", unsafe_allow_html=True)
+    with col_b:
+        if innings == 2:
+            st.markdown(f"<span class='badge badge-red'>RRR: {rrr:.2f}</span>", unsafe_allow_html=True)
+    with col_c:
+        st.markdown(f"<span class='badge badge-green'>Wickets: {wickets_in_hand}</span>", unsafe_allow_html=True)
+
+    # Predict
     try:
         proba = model.predict_proba(input_data)[0][1]
         st.success(f"✅ Probability of successful chase: {proba*100:.2f}%")
@@ -127,7 +119,7 @@ if st.button("Predict Probability"):
         if innings == 1:
             st.info(f"Projected Score at end of innings: {projected_score}")
 
-        # Match situation analysis
+        # Match analysis
         st.markdown("<div class='analysis-box'>", unsafe_allow_html=True)
         st.markdown("### 🧐 Match Situation Analysis")
         if innings == 2:
