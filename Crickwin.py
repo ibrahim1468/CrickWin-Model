@@ -6,7 +6,7 @@ import os
 # ===========================
 # 1. Load your trained model
 # ===========================
-MODEL_PATH = "model_clean_without_target_comp.joblib"  # adjust path
+MODEL_PATH = "live_probability_model_comp.joblib"  # adjust path
 if not os.path.exists(MODEL_PATH):
     st.error("Model file not found. Please upload or set correct path.")
     st.stop()
