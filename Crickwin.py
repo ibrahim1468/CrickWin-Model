@@ -101,7 +101,7 @@ with col1:
         'Moses Mabhida Stadium', 'Santarem Cricket Ground', 'Mangaung Oval', 'Sardar Patel Stadium', 'John Davies Oval',
         'Sportpark Maarschalkerweerd', 'Wanderers', 'University Oval', 'Jade Stadium', 'Brian Lara Stadium',
         'Clontarf Cricket Club Ground', 'Brabourne Stadium', 'Sky Stadium', 'Maple Leaf North-West Ground',
-        'Barsapara Cricket Stadium', 'Saxton Oval', 'De Beers Diamond Oval'
+        'Barsapara Cricket Stadium', 'Saxton Oval', 'De Beers Diamond Oval', "Others"
     ])
     innings = st.radio("Innings", options=[1, 2])
 
