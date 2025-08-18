@@ -31,7 +31,7 @@ st.title("🏏 Cricket Match Win Probability Predictor")
 st.subheader("Enter Match Details")
 
 venue = st.selectbox("Venue", options=[
-    'SuperSport Park': , 'Dubai International Cricket Stadium',
+    'SuperSport Park' , 'Dubai International Cricket Stadium',
        'Happy Valley Ground', 'Meersen',
        'Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)',
        "Lord's", 'Gahanga International Cricket Stadium. Rwanda',
