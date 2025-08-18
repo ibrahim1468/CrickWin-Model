@@ -1,27 +1,28 @@
-# streamlit_cricket_app.py
 import streamlit as st
 import pandas as pd
 import joblib
 import os
 import gdown
 
+st.set_page_config(page_title="Cricket Chase Predictor", page_icon="🏏", layout="centered")
+
 # ===========================
 # 1. Load Model (cached, lazy)
 # ===========================
 
 MODEL_PATH = "live_probability_model_comp.joblib"
-FILE_ID = "https://drive.google.com/file/d/1k1YdOdPzg9eyGUObTSDyFwNxsz9Urp7m/view?usp=drive_link"  
+FILE_ID = "1k1YdOdPzg9eyGUObTSDyFwNxsz9Urp7m"  # <-- only the ID
+DRIVE_URL = f"https://drive.google.com/uc?id={FILE_ID}"
 
 @st.cache_resource
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        with st.spinner("Downloading model (~250MB)... please wait ⏳"):
-            gdown.download(f"https://drive.google.com/uc?id={FILE_ID}", MODEL_PATH, quiet=False)
+        with st.spinner("⬇️ Downloading model (~250MB)... please wait ⏳"):
+            gdown.download(DRIVE_URL, MODEL_PATH, quiet=False)
     return joblib.load(MODEL_PATH)
 
 model = load_model()
 
-st.set_page_config(page_title="Cricket Chase Predictor", page_icon="🏏", layout="centered")
 st.title("🏏 Cricket Match Win Probability Predictor")
 
 # ===========================
